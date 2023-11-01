@@ -27,7 +27,7 @@ class Order:
 
     @staticmethod
     def get_shipping_address(order):
-        return order.shipping_address       
+        return order.shipping_address
 
     @staticmethod
     def get_filtered_info(predicate, func):
@@ -36,7 +36,7 @@ class Order:
             if predicate(order):
                 output.append(func(order))
         return output
-  
+
     @staticmethod
     def get_expedited_orders_customer_names():
         return Order.get_filtered_info(
@@ -55,7 +55,7 @@ class Order:
     def get_expedited_orders_shipping_addresses():
         return Order.get_filtered_info(
             Order.test_expedited,
-            Order.get_shipping_address)        
+            Order.get_shipping_address)
 
     @staticmethod
     def get_not_expedited_orders_customer_names():
@@ -75,4 +75,4 @@ class Order:
     def get_not_expedited_orders_shipping_addresses():
         return Order.get_filtered_info(
             Order.test_not_expedited,
-            Order.get_shipping_address) 
+            Order.get_shipping_address)

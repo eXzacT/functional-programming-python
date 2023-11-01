@@ -1,4 +1,5 @@
-from order import Order
+# from order import Order
+from order_with_lambdas import Order
 from customer import Customer
 
 
@@ -11,6 +12,10 @@ def main():
     cust2.name = 'Milliways Restaurant'
     cust2.address = 'Magrathea'
     cust2.enterprise = True
+    cust3 = Customer()
+    cust3.name = 'Pero Dijetlic'
+    cust3.address = 'MK10'
+    cust3.enterprise = True
 
     ord1 = Order()
     ord1.customer = cust1
@@ -22,11 +27,15 @@ def main():
     ord2.expedited = True
     ord2.shipping_address = 'Magrathea'
 
-    Order.orders = [ord1, ord2]
-    for address in ord1.get_expedited_orders_customer_addresses():
-        print(address)
-    for address in ord1.get_not_expedited_orders_customer_addresses():
-        print(address)
+    ord3 = (Order())
+    ord3.customer = cust3
+    ord3.expedited = True
+    ord3.shipping_address = 'MK10'
+
+    Order.orders = [ord1, ord2, ord3]
+    print(Order.get_expedited_orders_customer_names())
+    print(Order.get_expedited_orders_customer_addresses())
+    print(Order.get_expedited_orders_shipping_addresses())
 
 
 main()
