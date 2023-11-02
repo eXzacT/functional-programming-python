@@ -1,6 +1,6 @@
 class OrderItem:
+    item_id = ''
     name = ''
-    itemnumber = ''
     quantity = 0
     price = 0
-    backorderd = False
+    back_ordered = False
