@@ -1,28 +1,37 @@
 from collections import deque
-from itertools import islice
+from order_item import OrderItem
+from dataclasses import dataclass, field
+from customer import Customer
 
 
-def consume(iterator, n=None):
-    "Advance the iterator n-steps ahead. If n is none, consume entirely."
-    # Use functions that consume iterators at C speed.
-    if n is None:
-        # feed the entire iterator into a zero-length deque
-        deque(iterator, maxlen=0)
-    else:
-        # advance to the empty slice starting at position n
-        next(islice(iterator, n, n), None)
+def consume(iter):
+    deque(iter, maxlen=0)
 
 
+def action_if(func, predicate, iter):
+    consume(func(i) for i in iter if predicate(i))
+
+
+def get_updated_tuple(predicate, func, iter):
+    return tuple(func(i) if predicate(i) else i for i in iter)
+
+
+def get_filtered_info(predicate, func, iter):
+    return tuple(func(i) for i in iter if predicate(i))
+
+
+@dataclass(frozen=True)
 class Order:
-    # class attribute
-    orders = []
+    # Class attribute
+    orders: tuple = field(init=False)
 
-    # instance attributes
-    order_id = 0
-    shipping_address = ''
-    expedited = False
-    shipped = False
-    customer = None
+    # Instance attributes
+    order_id: int
+    shipping_address: str
+    expedited: bool
+    shipped: bool
+    customer: Customer
+    order_items: tuple[OrderItem, ...]
 
     @staticmethod
     def test_expedited(order):
@@ -46,29 +55,60 @@ class Order:
 
     @staticmethod
     def filter(predicate, iter):
-        # By wrapping filter with list we make it evaluate instantly, otherwise it will stay lazy (02/11/2023)
-        return filter(predicate, iter)
+        return tuple(filter(predicate, iter))
 
     @staticmethod
     def map(func, iter):
-        # Same comment as above (02/11/2023)
-        return map(func, iter)
-
-    @staticmethod
-    def get_filtered_info(predicate, func, iter):
-        return Order.map(func, Order.filter(predicate, iter))
-
-    @staticmethod
-    def get_filtered_info_lc(predicate, func, iter):
-        return [func(x) for x in iter if predicate(x)]
+        return tuple(map(func, iter))
 
     @staticmethod
     def get_order_by_id(order_id, orders):
-        return Order.filter(lambda order: order.order_id == order_id, orders)
+        return tuple(filter(lambda order: order.order_id == order_id, orders))
 
     @staticmethod
-    def get_order_by_id_lc(orderid, orders):
-        return [x for x in orders if x.orderid == orderid]
+    def notify_backordered(orders, msg):
+        for order in orders:
+            for item in order.order_items:
+                if item.backordered:
+                    order.customer.notify(order.customer, msg)
+
+    @staticmethod
+    def notify_backordered(orders, msg):
+        Order.map(lambda order: order.customer.notify(order.customer, msg),
+                  Order.filter(lambda order: Order.filter(
+                      lambda item: item.backordered, order.order_items),
+            orders)
+        )
+
+    @staticmethod
+    def notify_backordered(orders, msg):
+        Order.get_filtered_info(
+            lambda order: any(item.backordered for item in order.order_items),
+            lambda order: order.customer.notify(order.customer, msg),
+            orders
+        )
+
+    @staticmethod
+    def notify_backordered(orders, msg):
+        action_if(
+            lambda o: o.customer.notify(o.customer, msg),
+            lambda o: any(i.backordered for i in o.order_items),
+            orders
+        )
+
+    @staticmethod
+    def mark_backordered(orders, order_id, item_id):
+        return get_updated_tuple(
+            lambda o: o.order_id == order_id,
+            lambda o:
+                Order(o.order_id, o.shipping_address, o.expedited, o.shipped, o.customer,
+                      get_updated_tuple(
+                          lambda i: i.item_id == item_id,
+                          lambda i: OrderItem(
+                              i.item_id, i.name, i.quantity, i.price, True),
+                          o.order_items
+                      )),
+            orders)
 
     @staticmethod
     def set_order_expedited(order_id, orders):
@@ -76,28 +116,10 @@ class Order:
             order.expedited = True
 
     @staticmethod
-    def set_expedited(order):
-        order.expedited = True
-
-    @staticmethod
-    def set_order_expedited_f(order_id, orders):
-        # If we don't wrap this with consume nothing changes because both map and filter are lazy iters (02/11/2023)
-        consume(Order.map(Order.set_expedited,
-                          Order.filter(lambda order: order.order_id == order_id, orders)))
-
-    @staticmethod
     def get_expedited_orders_customer_names(orders):
         return Order.get_filtered_info(
             Order.test_expedited,
             Order.get_customer_name,
-            orders
-        )
-
-    @staticmethod
-    def get_expedited_orders_customer_names_lambda(orders):
-        return Order.get_filtered_info(
-            lambda order: order.expedited,
-            lambda order: order.customer.name,
             orders
         )
 
@@ -110,14 +132,6 @@ class Order:
         )
 
     @staticmethod
-    def get_expedited_orders_customer_addresses_lambda(orders):
-        return Order.get_filtered_info(
-            lambda order: order.expedited,
-            lambda order: order.customer.address,
-            orders
-        )
-
-    @staticmethod
     def get_expedited_orders_shipping_addresses(orders):
         return Order.get_filtered_info(
             Order.test_expedited,
@@ -126,33 +140,25 @@ class Order:
         )
 
     @staticmethod
-    def get_expedited_orders_shipping_addresses_lambda(orders):
-        return Order.get_filtered_info(
-            lambda order: order.expedited,
-            lambda order: order.shipping_address,
-            orders
-        )
-
-    @staticmethod
     def get_not_expedited_orders_customer_names(orders):
         return Order.get_filtered_info(
-            lambda order: not order.expedited,
-            lambda order: order.customer.name,
+            Order.test_not_expedited,
+            Order.get_customer_name,
             orders
         )
 
     @staticmethod
     def get_not_expedited_orders_customer_addresses(orders):
         return Order.get_filtered_info(
-            lambda order: not order.expedited,
-            lambda order: order.customer.address,
+            Order.test_not_expedited,
+            Order.get_customer_address,
             orders
         )
 
     @staticmethod
     def get_not_expedited_orders_shipping_addresses(orders):
         return Order.get_filtered_info(
-            lambda order: not order.expedited,
-            lambda order: order.shipping_address,
+            Order.test_not_expedited,
+            Order.get_shipping_address,
             orders
         )

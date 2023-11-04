@@ -1,37 +1,28 @@
 from order import Order
 from customer import Customer
+from order_item import OrderItem
 
 
 def main():
-    cust1 = Customer()
-    cust1.name = 'Heart of Gold'
-    cust1.address = 'The Milky Way Galaxy'
-    cust1.enterprise = False
-    cust2 = Customer()
-    cust2.name = 'Milliways Restaurant'
-    cust2.address = 'Magrathea'
-    cust2.enterprise = True
+    HoG = Customer('Heart of Gold', 'The Milky Way Galaxy', False)
+    Millis = Customer('Milliways Restaurant', 'Magrathea', True)
+    Arthur = Customer('Arthur Dent', 'Earth', False)
+    drive = OrderItem('Infinite Improbability Drive', 42, 1, 100, True)
+    Trillian = OrderItem('Date with Trillian', 43, 42, 1000000, True)
+    choc = OrderItem('Chocolate', 44, 200, 250, False)
 
-    ord1 = Order()
-    ord1.orderid = 1
-    ord1.customer = cust1
-    ord1.expedited = False
-    ord1.shipping_address = 'Infinitely Improbable'
+    ord1 = Order(1, 'Terra', False, False, HoG, (drive,))
+    ord2 = Order(2, 'Heart of Gold', True, False, Arthur, (Trillian, choc))
+    ord3 = Order(3, 'Magrathea', True, False, Millis, (choc,))
 
-    ord2 = (Order())
-    ord2.orderid = 2
-    ord2.customer = cust2
-    ord2.expedited = True
-    ord2.shipping_address = 'Magrathea'
+    Order.orders = (ord1, ord2, ord3)
+    Order.notify_backordered(Order.orders, "backordered items")
 
-    Order.orders = [ord1, ord2]
-    for address in ord1.get_expedited_orders_customer_addresses(Order.orders):
-        print(address)
-    for address in ord1.get_not_expedited_orders_customer_addresses(Order.orders):
-        print(address)
-
-    Order.set_order_expedited_f(ord1.order_id, Order.orders)
-    print(list(Order.get_expedited_orders_customer_addresses(Order.orders)))
+    print('\nMark item as backordered')
+    Order.orders = Order.mark_backordered(Order.orders, 3, 44)
+    Order.notify_backordered(Order.orders, "backordered items")
+    assert (Order.orders[1].order_items[0].backordered)
+    pass
 
 
 main()

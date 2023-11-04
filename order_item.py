@@ -1,6 +1,10 @@
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
 class OrderItem:
-    item_id = ''
-    name = ''
-    quantity = 0
-    price = 0
-    back_ordered = False
+    item_id: int
+    name: str
+    quantity: int
+    price: int
+    backordered: bool
