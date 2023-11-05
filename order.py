@@ -1,4 +1,4 @@
-from collections import deque
+from collections import deque, namedtuple
 from order_item import OrderItem
 from dataclasses import dataclass, field
 from customer import Customer
@@ -14,10 +14,6 @@ def action_if(func, predicate, iter):
 
 def get_updated_tuple(predicate, func, iter):
     return tuple(func(i) if predicate(i) else i for i in iter)
-
-
-def get_filtered_info(predicate, func, iter):
-    return tuple(func(i) for i in iter if predicate(i))
 
 
 @dataclass(frozen=True)
@@ -54,16 +50,19 @@ class Order:
         return order.shipping_address
 
     @staticmethod
-    def filter(predicate, iter):
-        return tuple(filter(predicate, iter))
+    def get_filtered_info(predicate, func, orders):
+        return map(func, filter(predicate, orders))
 
     @staticmethod
-    def map(func, iter):
-        return tuple(map(func, iter))
+    def get_order_details(orders):
+        d = namedtuple(
+            'OrderDetails', 'order_id, customer, expedited, item_id, item, total_price, backordered')
+        return (d(o.order_id, o.customer, o.expedited, i.item_id, i.name, i.price * i.quantity, i.backordered)
+                for o in orders for i in o.order_items)
 
     @staticmethod
     def get_order_by_id(order_id, orders):
-        return tuple(filter(lambda order: order.order_id == order_id, orders))
+        return filter(lambda o: o.order_id == order_id, orders)
 
     @staticmethod
     def notify_backordered(orders, msg):
@@ -110,9 +109,16 @@ class Order:
                       )),
             orders)
 
+    # @staticmethod
+    # def set_order_expedited(order_id, orders):
+    #     action_if(
+    #         lambda o: map(o.expedited)
+    #         lambda o: o.order_id == order_id,
+    #         orders
+    #     )
     @staticmethod
-    def set_order_expedited(order_id, orders):
-        for order in Order.get_order_by_id(order_id, orders):
+    def set_order_expedited(orderid, orders):
+        for order in Order.get_order_by_id(orderid, orders):
             order.expedited = True
 
     @staticmethod

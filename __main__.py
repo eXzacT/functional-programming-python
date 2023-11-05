@@ -1,6 +1,8 @@
-from order import Order
+from itertools import takewhile
 from customer import Customer
+from order import Order, consume
 from order_item import OrderItem
+from collections import deque
 
 
 def main():
@@ -22,7 +24,10 @@ def main():
     Order.orders = Order.mark_backordered(Order.orders, 3, 44)
     Order.notify_backordered(Order.orders, "backordered items")
     assert (Order.orders[1].order_items[0].backordered)
-    pass
+
+    Order.orders = (ord1, ord2, ord3)
+    consume(map(lambda oi: print(f'{oi.customer}: {oi.item} at ${oi.total_price}'),
+                takewhile(lambda oi: oi.order_id < 3, Order.get_order_details(Order.orders))))
 
 
 main()

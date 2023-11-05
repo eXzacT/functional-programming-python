@@ -8,3 +8,7 @@ class OrderItem:
     quantity: int
     price: int
     backordered: bool
+
+    @staticmethod
+    def total_price(self):
+        return self.quantity * self.price
