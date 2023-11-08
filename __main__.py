@@ -3,6 +3,7 @@ from customer import Customer
 from order import Order, consume
 from order_item import OrderItem
 from collections import deque
+from tramp import tramp
 
 
 def main():
@@ -28,6 +29,14 @@ def main():
     Order.orders = (ord1, ord2, ord3)
     consume(map(lambda oi: print(f'{oi.customer}: {oi.item} at ${oi.total_price}'),
                 takewhile(lambda oi: oi.order_id < 3, Order.get_order_details(Order.orders))))
+
+    print(len(
+        Order.count_expedited_orders_with_backordered_items(Order.orders))
+    )
+    print(Order.count_expedited_orders_with_backordered_items_comp(Order.orders))
+    print(Order.count_expedited_orders_with_backordered_items_rec(Order.orders))
+    print(Order.count_expedited_orders_with_backordered_items_tail(Order.orders))
+    print(tramp(Order.count_expedited_orders_with_backordered_items_gen, Order.orders))
 
 
 main()

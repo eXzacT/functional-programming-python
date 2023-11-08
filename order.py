@@ -2,6 +2,7 @@ from collections import deque, namedtuple
 from order_item import OrderItem
 from dataclasses import dataclass, field
 from customer import Customer
+from functools import lru_cache
 
 
 def consume(iter):
@@ -52,6 +53,11 @@ class Order:
     @staticmethod
     def get_filtered_info(predicate, func, orders):
         return map(func, filter(predicate, orders))
+
+    @property
+    @lru_cache(maxsize=1)
+    def total_price(self):
+        return sum(i.total_price for i in self.order_items)
 
     @staticmethod
     def get_order_details(orders):
@@ -109,13 +115,57 @@ class Order:
                       )),
             orders)
 
-    # @staticmethod
-    # def set_order_expedited(order_id, orders):
-    #     action_if(
-    #         lambda o: map(o.expedited)
-    #         lambda o: o.order_id == order_id,
-    #         orders
-    #     )
+    @staticmethod
+    def mark_backordered_items(items, item_id):
+        return get_updated_tuple(
+            lambda i: i.item_id == item_id,
+            lambda i: OrderItem(
+                i.item_id, i.name, i.quantity, i.price, True
+            ),
+            items
+        )
+
+    @staticmethod
+    def count_expedited_orders_with_backordered_items(orders):
+        return [o for o in orders if o.expedited and
+                any(i.backordered for i in o.order_items)]
+
+    @staticmethod
+    def count_expedited_orders_with_backordered_items_comp(orders):
+        return sum(1 for o in orders if o.expedited and
+                   any(i.backordered for i in o.order_items))
+
+    @staticmethod
+    def count_expedited_orders_with_backordered_items_rec(orders, count=0):
+        if len(orders) == 0:
+            return 0
+        o = orders[0]
+        count += 1 if o.expedited and any(
+            i.backordered for i in o.order_items) else 0
+        return count+Order.count_expedited_orders_with_backordered_items_rec(
+            orders[1:])
+
+    @staticmethod
+    def count_expedited_orders_with_backordered_items_tail(orders, accumulator=0):
+        if len(orders) == 0:
+            return accumulator
+        o = orders[0]
+        add = 1 if o.expedited and any(
+            i.backordered for i in o.order_items) else 0
+        return Order.count_expedited_orders_with_backordered_items_rec(
+            orders[1:], accumulator+add)
+
+    @staticmethod
+    def count_expedited_orders_with_backordered_items_gen(orders, accumulator=0):
+        if len(orders) == 0:
+            yield accumulator
+        o = orders[0]
+        add = 1 if any(
+            i.backordered for i in o.order_items if o.expedited) else 0
+        yield Order.count_expedited_orders_with_backordered_items_gen(
+            orders[1:], accumulator+add
+        )
+
     @staticmethod
     def set_order_expedited(orderid, orders):
         for order in Order.get_order_by_id(orderid, orders):

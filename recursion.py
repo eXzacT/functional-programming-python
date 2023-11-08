@@ -1,5 +1,5 @@
 import sys
-import types
+from tramp import tramp
 
 
 def fibonacci_iterative(n: int) -> int:
@@ -30,11 +30,11 @@ def fibonacci_recursive_tail(n: int, curr=0, nxt=1) -> int:
         return fibonacci_recursive_tail(n-1, nxt, curr+nxt)
 
 
-def fibonacci_recursive_tail_tramp(n: int, curr=0, nxt=1) -> int:
+def fibonacci_recursive_tail_gen(n: int, curr=0, nxt=1) -> int:
     if n == 0:
         yield curr
     else:
-        yield fibonacci_recursive_tail_tramp(n-1, nxt, curr+nxt)
+        yield fibonacci_recursive_tail_gen(n-1, nxt, curr+nxt)
 
 
 def calculate_sum(n: int) -> int:
@@ -53,16 +53,20 @@ def sum_recursive_tail(n: int, accumulator: int = 0) -> int:
     return sum_recursive_tail(n-1, accumulator+n)
 
 
-def tramp(gen, *args, **kwargs):
-    g = gen(*args, **kwargs)
-    while isinstance(g, types.GeneratorType):
-        g = next(g)
-    return g
+def sum_recursive_tail_gen(n: int, accumulator: int = 0) -> int:
+    if n == 0:
+        yield accumulator
+    yield sum_recursive_tail_gen(n-1, accumulator+n)
 
 
 print([fibonacci_recursive_tail(i) for i in range(10)])
-print([tramp(fibonacci_recursive_tail_tramp, i) for i in range(10)])
+print([tramp(fibonacci_recursive_tail_gen, i) for i in range(10)])
 print([fibonacci_recursive(i) for i in range(10)])
 
-sys.set_int_max_str_digits(20899)
-# print(tramp(fibonacci_recursive_tail_tramp, 100_000))
+# sys.set_int_max_str_digits(20899)
+# print(tramp(fibonacci_recursive_tail_gen, 100_000))
+# With this approach we are creating a generator from a generator (08/11/2023)
+# fibonacci_gen = (tramp(fibonacci_recursive_tail_gen, i)
+#                      for i in range(100_000))
+# for fibonacci in fibonacci_gen:
+#     print(fibonacci)

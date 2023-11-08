@@ -9,6 +9,6 @@ class OrderItem:
     price: int
     backordered: bool
 
-    @staticmethod
+    @property
     def total_price(self):
         return self.quantity * self.price
