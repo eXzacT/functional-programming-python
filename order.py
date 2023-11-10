@@ -30,6 +30,34 @@ class Order:
     customer: Customer
     order_items: tuple[OrderItem, ...]
 
+    def __post_init__(self):
+        match (self.order_id, self.shipping_address, self.expedited, self.shipped, self.customer):
+            case (int(), str(), bool(), bool(), Customer()):
+                pass
+            case (o, str(), bool(), bool(), Customer()):
+                raise ValueError(f'Order id {o} is not an integer')
+            case (int(), a, bool(), bool(), Customer()):
+                raise ValueError(f'Shipping address {a} is not a string')
+            case (int(), str(), e, bool(), Customer()):
+                raise ValueError(f'Expedited flag {e} is not a boolean')
+            case (int(), str(), bool(), s, Customer()):
+                raise ValueError(f'Shipped flag {s} is not a boolean')
+            case (int(), str(), bool(), bool(), c):
+                raise ValueError(f'{c} is not a customer object')
+            case _:
+                raise ValueError('Unable to parse arguments')
+
+        match self.order_items:
+            case tuple(t):
+                for oi in t:
+                    match oi:
+                        case OrderItem():
+                            pass
+                        case bad:
+                            raise ValueError(f'Invalid order item {bad}')
+            case _:
+                raise ValueError('Order items are not a tuple')
+
     @staticmethod
     def test_expedited(order):
         return order.expedited
@@ -87,14 +115,6 @@ class Order:
 
     @staticmethod
     def notify_backordered(orders, msg):
-        Order.get_filtered_info(
-            lambda order: any(item.backordered for item in order.order_items),
-            lambda order: order.customer.notify(order.customer, msg),
-            orders
-        )
-
-    @staticmethod
-    def notify_backordered(orders, msg):
         action_if(
             lambda o: o.customer.notify(o.customer, msg),
             lambda o: any(i.backordered for i in o.order_items),
@@ -114,16 +134,6 @@ class Order:
                           o.order_items
                       )),
             orders)
-
-    @staticmethod
-    def mark_backordered_items(items, item_id):
-        return get_updated_tuple(
-            lambda i: i.item_id == item_id,
-            lambda i: OrderItem(
-                i.item_id, i.name, i.quantity, i.price, True
-            ),
-            items
-        )
 
     @staticmethod
     def count_expedited_orders_with_backordered_items(orders):

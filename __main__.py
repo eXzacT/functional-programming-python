@@ -7,12 +7,13 @@ from tramp import tramp
 
 
 def main():
+
     HoG = Customer('Heart of Gold', 'The Milky Way Galaxy', False)
     Millis = Customer('Milliways Restaurant', 'Magrathea', True)
     Arthur = Customer('Arthur Dent', 'Earth', False)
-    drive = OrderItem('Infinite Improbability Drive', 42, 1, 100, True)
-    Trillian = OrderItem('Date with Trillian', 43, 42, 1000000, True)
-    choc = OrderItem('Chocolate', 44, 200, 250, False)
+    drive = OrderItem(42, 'Infinite Improbability Drive', 1, 100, True)
+    Trillian = OrderItem(43, 'Date with Trillian', 42, 1000000, True)
+    choc = OrderItem(44, 'Chocolate', 200, 250, False)
 
     ord1 = Order(1, 'Terra', False, False, HoG, (drive,))
     ord2 = Order(2, 'Heart of Gold', True, False, Arthur, (Trillian, choc))

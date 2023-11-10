@@ -19,17 +19,17 @@ with open("baby-names.csv") as names:
             return next(reader)[1]
         except StopIteration:
             return None
-    _ = read_name()  # Skip first row (08/11/2023)
+    _ = read_name()  # Skip first row
 
-    # First employee won't have a manager (08/11/2023)
+    # First employee won't have a manager
     emps = Employee(1, read_name(), None)
     # Increment i infinitely until break
     for i in itertools_count(2):
         nxt_name = read_name()
-        # If get_name() returns None it means we reached EOF (08/11/2023)
+        # If get_name() returns None it means we reached EOF
         if nxt_name == None:
             break
-        # Other employees have previous employee as manager (08/11/2023)
+        # Other employees have previous employee as manager
         emps = Employee(i, nxt_name, emps)
 
 
