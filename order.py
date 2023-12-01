@@ -2,7 +2,7 @@ from collections import deque, namedtuple
 from order_item import OrderItem
 from dataclasses import dataclass, field
 from customer import Customer
-from functools import lru_cache
+from functools import cached_property
 
 
 def consume(iter):
@@ -82,8 +82,7 @@ class Order:
     def get_filtered_info(predicate, func, orders):
         return map(func, filter(predicate, orders))
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def total_price(self):
         return sum(i.total_price for i in self.order_items)
 
